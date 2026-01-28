@@ -1,0 +1,40 @@
+{
+  "name": "@toast-ui/tui-editor-vue3",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@toast-ui/editor": "^3.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-typescript": "^8.2.1",
+    "@types/node": "^18.19.130",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/compiler-sfc": "^3.0.0",
+    "rollup": "^2.52.0",
+    "rollup-plugin-vue": "^6.0.0",
+    "tslib": "^2.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vue": "^3.0.0",
+    "vue-tsc": "^3.2.4"
+  },
+  "scripts": {
+    "build": "vite build && npm run build:types",
+    "build:types": "node ./node_modules/vue-tsc/bin/vue-tsc.js -p tsconfig.build.json",
+    "test:types": "node ./node_modules/vue-tsc/bin/vue-tsc.js -p tsconfig.json --noEmit"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "lib": ["ES2020", "DOM"],
+    "types": [],
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
