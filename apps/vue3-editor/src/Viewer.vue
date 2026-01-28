@@ -1,39 +1,46 @@
 <template>
-  <div ref="rootEl"></div>
+  <div ref="rootEl" style="width: 100%; min-height: 240px"></div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import { Viewer } from '@toast-ui/editor';
+import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue';
 
-const props = defineProps<{
-  value: string;
-}>();
+const props = defineProps({
+  value: { type: String, default: '' },
+});
 
 const rootEl = ref<HTMLElement | null>(null);
 let instance: any = null;
 
-onMounted(() => {
-  instance = new Viewer({
-    el: rootEl.value!,
+defineExpose({
+  getInstance: () => instance,
+});
+
+onMounted(async () => {
+  await nextTick();
+  if (!rootEl.value) return;
+
+  // Variante robusta: viewer bundle dedicato (evita ambiguità export)
+  const mod: any = await import('@toast-ui/editor-npm/dist/toastui-editor-viewer');
+  const ToastViewer = mod.default ?? mod.Viewer ?? mod;
+
+  instance = new ToastViewer({
+    el: rootEl.value,
     initialValue: props.value ?? '',
   });
 });
 
-onBeforeUnmount(() => {
-  instance?.destroy?.();
-  instance = null;
-});
-
 watch(
   () => props.value,
-  (val) => {
+  (v) => {
     if (!instance) return;
-    instance.setMarkdown?.(val ?? '');
+    if (instance.setMarkdown) instance.setMarkdown(v ?? '');
+    else if (instance.setValue) instance.setValue(v ?? '');
   }
 );
 
-defineExpose({
-  getInstance: () => instance,
+onBeforeUnmount(() => {
+  if (instance?.destroy) instance.destroy();
+  instance = null;
 });
 </script>

@@ -1,5 +1,5 @@
-declare module '*.vue' {
-  import type { DefineComponent } from 'vue';
-  const component: DefineComponent<{}, {}, any>;
-  export default component;
+declare module '@toast-ui/editor-npm' {
+  const Editor: any;
+  export const Viewer: any;
+  export default Editor;
 }

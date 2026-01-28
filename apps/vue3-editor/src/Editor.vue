@@ -1,46 +1,45 @@
 <template>
-  <div ref="rootEl"></div>
+  <div ref="rootEl" style="width: 100%; min-height: 420px"></div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import Editor from '@toast-ui/editor';
+import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue';
 
 type EditType = 'markdown' | 'wysiwyg';
 type PreviewStyle = 'vertical' | 'tab';
 
-const props = withDefaults(
-  defineProps<{
-    modelValue: string;
-    height?: string;
-    initialEditType?: EditType;
-    previewStyle?: PreviewStyle;
-    placeholder?: string;
-    autofocus?: boolean;
-    usageStatistics?: boolean;
-  }>(),
-  {
-    height: '500px',
-    initialEditType: 'markdown',
-    previewStyle: 'vertical',
-    placeholder: '',
-    autofocus: false,
-    usageStatistics: false,
-  },
-);
+const props = defineProps({
+  modelValue: { type: String, default: '' },
+  height: { type: String, default: '420px' },
+  initialEditType: { type: String as () => EditType, default: 'markdown' },
+  previewStyle: { type: String as () => PreviewStyle, default: 'vertical' },
+  placeholder: { type: String, default: '' },
+  autofocus: { type: Boolean, default: false },
+  usageStatistics: { type: Boolean, default: false },
+});
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-  (e: 'change', value: string): void;
+  (e: 'update:modelValue', v: string): void;
+  (e: 'change', v: string): void;
 }>();
 
 const rootEl = ref<HTMLElement | null>(null);
-let instance: Editor | null = null;
+let instance: any = null;
 let isSettingFromOutside = false;
 
-onMounted(() => {
-  instance = new Editor({
-    el: rootEl.value!,
+defineExpose({
+  getInstance: () => instance,
+});
+
+onMounted(async () => {
+  await nextTick();
+  if (!rootEl.value) return;
+
+  const mod: any = await import('@toast-ui/editor-npm');
+  const ToastEditor = mod.default ?? mod.Editor ?? mod;
+
+  instance = new ToastEditor({
+    el: rootEl.value,
     height: props.height,
     initialEditType: props.initialEditType,
     previewStyle: props.previewStyle,
@@ -51,39 +50,28 @@ onMounted(() => {
   });
 
   instance.on('change', () => {
-    if (!instance) return;
     if (isSettingFromOutside) return;
-
     const md = instance.getMarkdown();
     emit('update:modelValue', md);
     emit('change', md);
   });
 });
 
-onBeforeUnmount(() => {
-  instance?.destroy();
-  instance = null;
-});
-
 watch(
   () => props.modelValue,
-  (val) => {
+  (v) => {
     if (!instance) return;
     const current = instance.getMarkdown();
-    if ((val ?? '') === current) return;
+    if (v === current) return;
 
     isSettingFromOutside = true;
-    instance.setMarkdown(val ?? '', false);
+    instance.setMarkdown(v ?? '');
     isSettingFromOutside = false;
-  },
+  }
 );
 
-// API per chi usa ref al componente
-defineExpose({
-  getInstance: () => instance,
-  getMarkdown: () => instance?.getMarkdown(),
-  getHTML: () => instance?.getHTML(),
-  setMarkdown: (v: string) => instance?.setMarkdown(v ?? '', false),
-  setHTML: (v: string) => instance?.setHTML(v ?? ''),
+onBeforeUnmount(() => {
+  if (instance?.destroy) instance.destroy();
+  instance = null;
 });
 </script>
