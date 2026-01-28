@@ -14,9 +14,15 @@
       <button @click="md = sample">Load sample</button>
     </div>
 
-    <Editor v-model="md" height="420px" :initialEditType="editType" previewStyle="vertical" />
+    <Editor
+      :key="editType"
+      v-model="md"
+      height="420px"
+      :initialEditType="editType"
+      previewStyle="vertical"
+    />
 
-    <h3>Viewer</h3>
+    <h3>Viewer (live)</h3>
     <Viewer :value="md" />
   </div>
 </template>

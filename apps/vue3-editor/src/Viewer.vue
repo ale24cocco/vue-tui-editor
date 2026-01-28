@@ -14,6 +14,7 @@ let instance: any = null;
 
 defineExpose({
   getInstance: () => instance,
+  setMarkdown: (v: string) => instance?.setMarkdown?.(v ?? ''),
 });
 
 onMounted(async () => {
@@ -24,10 +25,10 @@ onMounted(async () => {
   const mod: any = await import('@toast-ui/editor-npm/dist/toastui-editor-viewer');
   const ToastViewer = mod.default ?? mod.Viewer ?? mod;
 
-  instance = new ToastViewer({
-    el: rootEl.value,
-    initialValue: props.value ?? '',
-  });
+  instance = new ToastViewer({ el: rootEl.value, initialValue: '' });
+  if (props.value) {
+    instance.setMarkdown?.(props.value);
+  }
 });
 
 watch(

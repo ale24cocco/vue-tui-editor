@@ -29,6 +29,8 @@ let isSettingFromOutside = false;
 
 defineExpose({
   getInstance: () => instance,
+  getMarkdown: () => instance?.getMarkdown?.() ?? '',
+  setMarkdown: (v: string) => instance?.setMarkdown?.(v ?? ''),
 });
 
 onMounted(async () => {
@@ -65,8 +67,51 @@ watch(
     if (v === current) return;
 
     isSettingFromOutside = true;
-    instance.setMarkdown(v ?? '');
-    isSettingFromOutside = false;
+    try {
+      instance.setMarkdown(v ?? '');
+    } finally {
+      isSettingFromOutside = false;
+    }
+  }
+);
+
+watch(
+  () => props.height,
+  (h) => {
+    if (!instance) return;
+    if (typeof instance.setHeight === 'function') instance.setHeight(h);
+  }
+);
+
+watch(
+  () => [props.initialEditType, props.previewStyle] as const,
+  async () => {
+    if (!instance || !rootEl.value) return;
+
+    const currentValue = instance.getMarkdown?.() ?? props.modelValue ?? '';
+    instance.destroy?.();
+    instance = null;
+
+    const mod: any = await import('@toast-ui/editor-npm');
+    const ToastEditor = mod.default ?? mod.Editor ?? mod;
+
+    instance = new ToastEditor({
+      el: rootEl.value,
+      height: props.height,
+      initialEditType: props.initialEditType,
+      previewStyle: props.previewStyle,
+      initialValue: currentValue,
+      placeholder: props.placeholder,
+      autofocus: props.autofocus,
+      usageStatistics: props.usageStatistics,
+    });
+
+    instance.on('change', () => {
+      if (isSettingFromOutside) return;
+      const md = instance.getMarkdown();
+      emit('update:modelValue', md);
+      emit('change', md);
+    });
   }
 );
 
