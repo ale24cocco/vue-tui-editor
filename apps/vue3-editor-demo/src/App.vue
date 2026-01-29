@@ -13,13 +13,33 @@
 
       <button @click="md = sample">Load sample</button>
 
-      <button
-        :disabled="!selection.text"
-        @click="askAboutSelection"
-        title="Use the current selection as RAG query"
+      <label
+        style="
+          border: 1px solid #ccc;
+          padding: 6px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          background: #fff;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+        "
       >
-        Ask about selection
-      </button>
+        <span>📄 Load .md</span>
+
+        <span v-if="loadedFileName" style="opacity: 0.7; font-size: 12px">
+          {{ loadedFileName }}
+        </span>
+
+        <input
+          type="file"
+          accept=".md,.markdown,text/markdown"
+          style="display: none"
+          @change="onFileChange"
+        />
+      </label>
+
+      <button :disabled="!selection.text" @click="askAboutSelection">Ask about selection</button>
     </div>
 
     <Editor
@@ -97,9 +117,9 @@ type SelectionPayload = {
 };
 
 const editorRef = ref<any>(null);
-
 const md = ref('# Hello\n\nThis is **Toast UI Editor** (Vue 3 wrapper).');
 const editType = ref<EditType>('markdown');
+const loadedFileName = ref<string | null>(null);
 
 const selection = ref<SelectionPayload>({
   mode: 'markdown',
@@ -131,5 +151,31 @@ function askAboutSelection() {
   // pull-style (opzionale): se aggiungi getSelection nel wrapper
   // const sel = editorRef.value?.getSelection?.()
   // console.log('getSelection() ->', sel)
+}
+
+function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (!input.files || !input.files.length) return;
+
+  const file = input.files[0];
+  loadedFileName.value = file.name;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const text = String(reader.result ?? '');
+    md.value = text;
+
+    selection.value = {
+      mode: editType.value,
+      isCollapsed: true,
+      text: '',
+    };
+  };
+
+  reader.readAsText(file);
+
+  // reset per permettere ricaricamento stesso file
+  input.value = '';
 }
 </script>
